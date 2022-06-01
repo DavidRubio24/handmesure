@@ -5,21 +5,22 @@ import numpy as np
 
 
 class bar:
-    def __init__(self, *iterable, append=''):
+    from time import time
+
+    def __init__(self, *iterable, append='', length=False):
         """Inputs the same arguments as range or an iterable object."""
         if not iterable: raise ValueError()
         iterable = range(*iterable) if isinstance(iterable[0], int) else iterable[0]
-        self.iterable, self.append, self.start, self.len, self.i, self.r = iter(iterable), append, False, len(iterable), 0, None
+        self.iterable, self.append, self.start, self.len, self.i, self.r = iter(iterable), append, False, length or len(iterable), 0, None
 
     def __iter__(self): return self
 
     def __next__(self):
-        from time import time
-        now = time()
-        self.start = self.start if self.start else now
+        now = bar.time()
+        self.start = self.start or now
         took = int(now - self.start)
         if self.i >= self.len:
-            print('\r' + f"{self.i: >6}/{self.len:<} \x1B[0;34m[\x1B[0;32m{'■' * 30}\x1B[0;34m]\x1B[0m  Took:" + ( f'{took // 60: 3}m' if took >= 60 else '    ') + f'{took % 60:3}s  ' + self.append.format(self.r, self.i))
+            print('\r' + f"{self.i: >6}/{self.len:<} \x1B[0;34m[\x1B[0;32m{'■' * 30}\x1B[0;34m]\x1B[0m  Took:" + (f'{took // 60: 3}m' if took >= 60 else '    ') + f'{took % 60:3}s  ' + self.append.format(self.r, self.i))
         self.r = next(self.iterable)
         eta = int((self.len - self.i) * (now - self.start) / self.i) if self.i else -1
         done = 30 * self.i / self.len; cs = {0: '', 1: '·', 2: '◧', 3: '■'}  # □ (colab), ◧ (any other console)
@@ -30,20 +31,19 @@ class bar:
         return self.r
 
 
-def true(*x): return True
+# TODO: This should use list(map(function, bar(os.listdir(path)))),
+#  where function is a class method and the object stores data.
+
+def true(*_): return True
 
 
 def map_folderwise(function, path, shape=(), dtype=np.float32, condition=true, info=None):
-    files = [path + '/' + file for file in os.listdir(path) if condition(path + '/' + file)]
+    files = [os.path.join(path, file) for file in os.listdir(path) if condition(os.path.join(path, file))]
 
     result = np.zeros((len(files), *shape), dtype)
 
-    for i, file in enumerate(bar(files)):
-        if condition(file):
-            if info is None:
-                result[i] = function(file)
-            else:
-                result[i] = function(file, info[i])
+    for index, file in enumerate(bar(files)):
+        result[index] = function(file) if info is None else function(file, info[index])
     return result
 
 

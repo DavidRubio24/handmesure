@@ -6,7 +6,7 @@ Utilities to locate points of interest in images of scanned hands to mesure the 
 This project aims to detect points in two different poses: opened and closed.
 Each pose has its own points to locate, 23 for the opened hands and 15 for the closed ones.
 
-As of right (2022/3/8) now the strategy is as follows:
+As of right now (2022/3/8) the strategy is as follows:
 1. Detect the hand: make sure that there's a hand in the image, locate it and determine if it's a right hand or left hand.
 2. Crop the hand from the image. Flip it if it is a left hand.
 3. Estimate the location of the points of interest.
