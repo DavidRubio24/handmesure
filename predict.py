@@ -15,7 +15,9 @@ class Predictor:
     def __call__(self, image: np.ndarray | str):
         image = open_image(image)
         image = cv2.resize(image, tuple(self.model.input.shape[1:3]))
-        prediction = self.model(image.reshape(1, *image.shape))
+        image = image.astype(np.float32) / 256
+        image = image[np.newaxis, ...]
+        prediction = self.model(image)
         if isinstance(prediction, list):
             prediction = [p.numpy() for p in prediction]
         else:
