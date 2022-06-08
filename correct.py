@@ -4,16 +4,18 @@ import sys
 import cv2
 import numpy as np
 
+from utils.files import open_image
 
 COLOR_SCHEME = [[221, 229, 205], [227, 30, 58], [112, 110, 112], [233, 59, 147], [172, 212, 191], [22, 42, 79], [56, 137, 192], [52, 18, 199], [162, 247, 132], [54, 129, 157], [39, 29, 226], [164, 126, 30], [32, 70, 53], [220, 28, 142], [33, 249, 24], [127, 148, 194], [57, 206, 55], [162, 222, 243], [72, 148, 77], [169, 228, 236], [114, 69, 177], [145, 176, 127], [39, 208, 225], [237, 120, 42], [165, 135, 78], [0, 29, 129], [143, 144, 59], [7, 106, 219], [58, 78, 77], [38, 126, 209], [90, 198, 169], [59, 16, 221], [249, 96, 196], [162, 129, 137], [223, 9, 143], [216, 3, 123], [204, 156, 173], [134, 23, 5], [123, 202, 252], [154, 144, 40], [119, 43, 192], [192, 229, 58], [236, 161, 205], [18, 120, 170], [149, 176, 50], [94, 104, 174], [192, 67, 17], [20, 118, 178], [60, 210, 131], [110, 188, 212]]
 
 
 class Corrector:
-    def __init__(self, image: np.ndarray, points: np.ndarray, window_size=.25, title='', point_idx=0):
-        self.points_original = points
+    def __init__(self, image: np.ndarray, points: np.ndarray, window_size=1, title=''):
+        self.points_original = np.array(points, copy=False)
         self.points = np.array(points, dtype=float, copy=True)
         self.points_colors = np.array(COLOR_SCHEME, np.uint8)
 
+        image = open_image(image)
         self.image = image
         self.resized = image.copy()
         # TODO: zoom in to centain point.
@@ -46,7 +48,7 @@ class Corrector:
 
     def show_image(self):
         resized = self.resized.copy()
-        r = 3
+        r = 6
         # Draw points
         for (x, y), color in zip(self.points, self.points_colors):
             x, y = self.original2window(x, y)
@@ -55,6 +57,7 @@ class Corrector:
             x, y = round(x), round(y)
             resized[y - r:y + r + 1, x:x+1] = color
             resized[y:y+1, x - r:x + r + 1] = color
+            cv2.circle(resized, (x, y), r, (255, 255, 255), 1)
         cv2.imshow(self.title, resized)
 
     def show(self):
@@ -91,7 +94,7 @@ class Corrector:
         elif event == cv2.EVENT_LBUTTONUP:
             self.moving_point = None
             self.show_image()
-        elif event == cv2.EVENT_MOUSEWHEEL and flags & cv2.EVENT_FLAG_CTRLKEY:
+        elif event == cv2.EVENT_MOUSEWHEEL:
             scale = .95
             if flags < 0:
                 x, y = self.window2original(x, y)
@@ -125,7 +128,7 @@ class Corrector:
         cv2.destroyWindow(self.title)
 
 
-def main(path='landmarks_M2_.txt', out='landmarks_M2_00.txt'):
+def main(path='landmarks_M2_00.txt', out='landmarks_M2_01.txt'):
     with open(path) as f:
         landmarks: dict = eval(f.read())
     new_landmarks = landmarks.copy()
@@ -140,3 +143,7 @@ def main(path='landmarks_M2_.txt', out='landmarks_M2_00.txt'):
         with open(out, 'w') as f:
             f.write(str(new_landmarks))
     return new_landmarks
+
+
+if __name__ == '__main__':
+    main(*sys.argv[1:])

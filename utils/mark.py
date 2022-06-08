@@ -35,7 +35,7 @@ def main(path='./data/crop'):
     for image in bar(images, append='{0}'):
         i = cv2.imread(image)
         landmarks = predictor(i)
-        landmarks = predictor.scale(landmarks.reshape(-1, 2), i.shape[:2][::-1])
+        landmarks = predictor.scale(landmarks.reshape(-1, 2), i.shape[:2])
         d[image] = [list(x) for x in landmarks]
         # Save d to file.
         with open('landmarks.txt', 'w') as f:
