@@ -4,16 +4,10 @@ import sys
 import cv2
 import numpy as np
 
+from constants import points_interest_closed, points_interest_opened
 from correct import Corrector
+from mesure import mesure_closed, mesure_opened, to_list, compute_distances
 from utils.files import chose_name
-
-points_interest_closed = ['C_f1Tip', 'C_f2Tip', 'C_f3Tip', 'C_f4Tip', 'C_f5Tip', 'C_f1BaseC', 'C_f2BaseC', 'C_f3BaseC',
-                          'C_f4BaseC', 'C_f5BaseC', 'C_f1Defect', 'C_wristBaseC', 'C_palmBaseC', 'C_m1_2', 'C_m1_3']
-
-points_interest_opened = ['O_f1Tip', 'O_f1DistalR', 'O_f1DistalL', 'O_f2Tip', 'O_f2DistalR', 'O_f2DistalL',
-                          'O_f2MedialR', 'O_f2MedialL', 'O_f3Tip', 'O_f3DistalR', 'O_f3DistalL', 'O_f3MedialR',
-                          'O_f3MedialL', 'O_f4Tip', 'O_f4DistalR', 'O_f4DistalL', 'O_f4MedialR', 'O_f4MedialL',
-                          'O_f5Tip', 'O_f5DistalR', 'O_f5DistalL', 'O_f5MedialR', 'O_f5MedialL']
 
 
 def get_landmarks(image: str):
@@ -71,7 +65,7 @@ def main(path=r'.\data'):
         if landmarks_files:
             landmarks_file = os.path.join(path, landmarks_files[-1])
             d = eval(open(landmarks_file).read())
-            landmarks = np.array(list(d.values()))
+            landmarks = np.array([v for k, v in d.items() if k in points_interest_opened or k in points_interest_closed])
             print(f'Leyendo landmarks de {landmarks_file}.')
             new_landmarks_file = chose_name(landmarks_files[-1], path)
             new = False
@@ -89,13 +83,21 @@ def main(path=r'.\data'):
         cv2.destroyWindow(c.title)
         if update:
             d = dict(zip(points_interest_closed if 'M1' in new_landmarks_file else points_interest_opened, c.points.tolist()))
+
+            if 'M1' in new_landmarks_file:
+                d |= compute_distances(mesure_closed(dict(zip(points_interest_closed, c.points))))
+            elif 'M2' in new_landmarks_file:
+                d |= compute_distances(mesure_opened(dict(zip(points_interest_opened, c.points))))
+            else:
+                print(f'{new_landmarks_file} no contiene ni "M1" ni "M2" en el nombre. No se pueden calcular las medidas.', file=sys.stderr)
+
             with open(new_landmarks_file, 'w') as f:
-                f.write(str(d).replace("], '", "],\n'").replace("{'", "{\n'").replace("]}", "]\n}").replace("': [", "':\t["))
+                f.write(str(d).replace(", '", ",\n'").replace("{'", "{\n'").replace("}", "\n}").replace("': [", "':\t["))
             print(f'Puntos modificados guardados en {new_landmarks_file}')
         elif new:
             d = dict(zip(points_interest_closed if 'M1' in new_landmarks_file else points_interest_opened, c.points.tolist()))
             with open(new_landmarks_file, 'w') as f:
-                f.write(str(d).replace("], '", "],\n'").replace("{'", "{\n'").replace("]}", "]\n}").replace("': [", "':\t["))
+                f.write(str(d).replace(", '", ",\n'").replace("{'", "{\n'").replace("}", "\n}").replace("': [", "':\t["))
             print(f'Puntos generados guardados en {new_landmarks_file}')
         else:
             print(f'No se modificaron los puntos o no se quisieron guardar.')

@@ -5,7 +5,7 @@ import numpy as np
 
 
 def mesure_closed(points: dict):
-    points = {key: np.array(value) for key, value in points.items()}
+    points = {key: np.array(value, copy=False) for key, value in points.items()}
 
     # Compute the distance between the points in pixels.
     distance = {'handLength':          (points['C_f3Tip'],   points['C_wristBaseC']),
@@ -22,7 +22,7 @@ def mesure_closed(points: dict):
     direction /= np.linalg.norm(direction)
 
     handLengthCrotch = np.dot(points['C_f3Tip'] - points['C_f1Defect'], direction) * direction + points['C_f1Defect']
-    distance['handLengthCrotch'] = (handLengthCrotch, points['C_f3Tip'])
+    distance['handLengthCrotch'] = (handLengthCrotch, points['C_f1Defect'])
 
     # handBreadthMeta perpendicular to middle finger.
     direction[:] = -direction[1], direction[0]
@@ -33,7 +33,7 @@ def mesure_closed(points: dict):
 
 
 def mesure_opened(points: dict):
-    points = {key: np.array(value) for key, value in points.items()}
+    points = {key: np.array(value, copy=False) for key, value in points.items()}
 
     # Compute the distance between the points in pixels.
     distance = {'handThumbBreadth':        (points['O_f1DistalR'], points['O_f1DistalL']),
