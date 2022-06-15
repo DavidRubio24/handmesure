@@ -43,7 +43,7 @@ def open_image(file, path=None) -> np.ndarray:
 def chose_name(name, path='./'):
     """
     Chose a name for a file that doesn't already exist.
-    If the name has an extension with digits they will be increased.
+    If the name has digits they will be increased.
     """
     new_name = os.path.join(path, name) if path else name
     # Until we generate a new name
@@ -54,9 +54,7 @@ def chose_name(name, path='./'):
 
 
 def increase_name(name):
-    """
-    Increase the digits in a name.
-    """
+    """Increase the digits in a name."""
     # Increase the least significant digit within the name
     for i in range(len(name) - 1, -2, -1):
         if i == -1:
