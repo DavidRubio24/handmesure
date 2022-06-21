@@ -6,7 +6,7 @@ import numpy as np
 
 from constants import points_interest_closed, points_interest_opened
 from correct import Corrector
-from mesure import mesure_closed, mesure_opened, to_list, compute_distances
+from mesure import mesure_closed, mesure_opened, compute_distances
 from utils.files import chose_name
 
 
@@ -54,10 +54,12 @@ def get_landmarks(image: str):
 
 def main(path=r'.\data'):
     if not os.path.isdir(path):
-        print('Ruta inexistente.', file=sys.stderr)
+        print(f'Ruta inexistente ({path}).', file=sys.stderr)
         return
 
-    images = [file for file in os.listdir(path) if file.endswith('.png')]
+    images = [file for file in os.listdir(path) if file.endswith(('.png', '.bmp'))]
+
+    print(f'{len(images)} imágenes en {os.path.abspath(path)}.')
 
     for image in images:
         landmarks_file_start = image[:-4] + '_lm'
@@ -81,7 +83,7 @@ def main(path=r'.\data'):
         print(f'Corrige landmarks de {image}...')
         update = c.show()
         cv2.destroyWindow(c.title)
-        if update:
+        if update or new:
             d = dict(zip(points_interest_closed if 'M1' in new_landmarks_file else points_interest_opened, c.points.tolist()))
 
             if 'M1' in new_landmarks_file:
@@ -93,12 +95,7 @@ def main(path=r'.\data'):
 
             with open(new_landmarks_file, 'w') as f:
                 f.write(str(d).replace(", '", ",\n'").replace("{'", "{\n'").replace("}", "\n}").replace("': [", "':\t["))
-            print(f'Puntos modificados guardados en {new_landmarks_file}')
-        elif new:
-            d = dict(zip(points_interest_closed if 'M1' in new_landmarks_file else points_interest_opened, c.points.tolist()))
-            with open(new_landmarks_file, 'w') as f:
-                f.write(str(d).replace(", '", ",\n'").replace("{'", "{\n'").replace("}", "\n}").replace("': [", "':\t["))
-            print(f'Puntos generados guardados en {new_landmarks_file}')
+            print(f'Puntos {"modificados" if update else "generados"} guardados en {new_landmarks_file}')
         else:
             print(f'No se modificaron los puntos o no se quisieron guardar.')
 

@@ -15,6 +15,7 @@ def mesure_closed(points: dict):
                 'handMidLength':       (points['C_f3Tip'],   points['C_f3BaseC']),
                 'handFourLength':      (points['C_f4Tip'],   points['C_f4BaseC']),
                 'handLittleLength':    (points['C_f5Tip'],   points['C_f5BaseC']),
+                'handBreadthMeta_C_m1_3-C_m1_2': (points['C_m1_2'], points['C_m1_3']),
                 }
 
     # handLengthCrotch parallel to middle finger.
@@ -27,7 +28,12 @@ def mesure_closed(points: dict):
     # handBreadthMeta perpendicular to middle finger.
     direction[:] = -direction[1], direction[0]
     handBreadthMeta = np.dot(points['C_m1_2'] - points['C_m1_3'], direction) * direction + points['C_m1_3']
-    distance['handBreadthMeta'] = (handBreadthMeta, points['C_m1_3'])
+    distance['handBreadthMeta_perpendicular_finger3'] = (handBreadthMeta, points['C_m1_3'])
+    direction = points['C_f3Tip'] - points['C_wristBaseC']
+    direction /= np.linalg.norm(direction)
+    direction[:] = -direction[1], direction[0]
+    handBreadthMeta = np.dot(points['C_m1_2'] - points['C_m1_3'], direction) * direction + points['C_m1_3']
+    distance['handBreadthMeta_perpendicular_hand'] = (handBreadthMeta, points['C_m1_3'])
 
     return distance
 

@@ -53,28 +53,25 @@ class Corrector:
         cv2.imshow(self.title, image[self.crop[0]:self.crop[2], self.crop[1]:self.crop[3]])
 
     def show(self):
-        self.show_image()
-        k = cv2.waitKey()
-        if k == 27:  # Esc
-            self.points = self.points_original.copy()
-            return self.show()
-        elif k == 8:          # Return
-            return False
-        elif k in [32, 13]:   # Space or enter
-            return np.any(self.points != self.points_original)
-        elif k == ord('-'):
-            x0, y0, x1, y1 = self.crop
-            crop = (max(x0 - 10, 0), max(y0 - 10, 0), min(x1 + 10, self.image.shape[0] - 1), min(y1 + 10, self.image.shape[1] - 1))
-            self.crop = tuple(map(round, crop))
-            return self.show()
-        elif k == ord('+'):
-            x0, y0, x1, y1 = self.crop
-            x0, y0, x1, y1 = (x0 + 10, y0 + 10, x1 - 10, y1 - 10)
-            crop = (min(x0, x1 - 11), min(y0, y1 - 11), max(x1, x0 + 11), max(y1, y0 + 11))
-            self.crop = tuple(map(round, crop))
-            return self.show()
-        else:
-            return self.show()
+        while True:
+            self.show_image()
+            k = cv2.waitKey()
+            if k == 27:  # Esc
+                self.points = self.points_original.copy()
+                return self.show()
+            elif k == 8:          # Return
+                return False
+            elif k in [32, 13]:   # Space or enter
+                return np.any(self.points != self.points_original)
+            elif k == ord('-'):
+                x0, y0, x1, y1 = self.crop
+                crop = (max(x0 - 10, 0), max(y0 - 10, 0), min(x1 + 10, self.image.shape[0] - 1), min(y1 + 10, self.image.shape[1] - 1))
+                self.crop = tuple(map(round, crop))
+            elif k == ord('+'):
+                x0, y0, x1, y1 = self.crop
+                x0, y0, x1, y1 = (x0 + 10, y0 + 10, x1 - 10, y1 - 10)
+                crop = (min(x0, x1 - 11), min(y0, y1 - 11), max(x1, x0 + 11), max(y1, y0 + 11))
+                self.crop = tuple(map(round, crop))
 
     def on_mouse(self, event, x, y, *_):
         if event == cv2.EVENT_RBUTTONDOWN:
