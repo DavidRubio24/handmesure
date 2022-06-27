@@ -77,7 +77,7 @@ def mesure_opened(points: dict):
     return distance
 
 
-def compute_distances(points: dict, factor: float = 0.08):
+def compute_distances(points: dict, factor: float = 138/1711.1):
     distances = {k: np.linalg.norm(v[1] - v[0]) * factor for k, v in points.items()}
     return distances
 

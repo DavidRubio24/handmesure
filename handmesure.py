@@ -69,7 +69,7 @@ def main(path=r'.\data'):
             d = eval(open(landmarks_file).read())
             landmarks = np.array([v for k, v in d.items() if k in points_interest_opened or k in points_interest_closed])
             print(f'Leyendo landmarks de {landmarks_file}.')
-            new_landmarks_file = chose_name(landmarks_files[-1], path)
+            new_landmarks_file = landmarks_file
             new = False
         else:
             print(f'{image} no tiene landmarks. Se generarán automaticamente.')
@@ -78,7 +78,7 @@ def main(path=r'.\data'):
                 print(f'No se pueden generar los landmarks de {image}.')
                 continue
             new = True
-            new_landmarks_file = chose_name(f'{landmarks_file_start}00.txt', path)
+            new_landmarks_file = os.path.join(path, f'{landmarks_file_start}.txt')
         c = Corrector(cv2.imread(os.path.join(path, image)), landmarks)
         print(f'Corrige landmarks de {image}...')
         update = c.show()
@@ -98,6 +98,8 @@ def main(path=r'.\data'):
             print(f'Puntos {"modificados" if update else "generados"} guardados en {new_landmarks_file}')
         else:
             print(f'No se modificaron los puntos o no se quisieron guardar.')
+
+    print('Fin: todas las imágenes han sido corregidas.')
 
 
 if __name__ == '__main__':
