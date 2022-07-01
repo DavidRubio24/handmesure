@@ -10,17 +10,18 @@ from utils.files import open_image
 
 
 class Corrector:
-    def __init__(self, image: np.ndarray, points: np.ndarray):
+    def __init__(self, image_path: str, points: np.ndarray):
         self.points_original = np.array(points, copy=False)
         self.points = np.array(points, dtype=float, copy=True)
         self.points_colors = np.array(COLOR_SCHEME, np.uint8)
-        self.crop = (round(self.points[:, 1].min()) - 100,
-                     round(self.points[:, 0].min()) - 300,
+        self.crop = (max(0, round(self.points[:, 1].min()) - 100),
+                     max(0, round(self.points[:, 0].min()) - 300),
                      round(self.points[:, 1].max()) + 100,
                      round(self.points[:, 0].max()) + 300)
 
-        image = open_image(image)
-        self.image = image
+        self.image_path = image_path
+        self.image = open_image(image_path)
+        self.modified_image = self.image.copy()
 
         self.title = 'Enter o Espacio -> correcto. Borrar -> incorrecto. Esc -> deshacer.'
         self.moving_point = None
@@ -50,6 +51,8 @@ class Corrector:
         for name, ((x0, y0), (x1, y1)) in distances.items():
             cv2.line(image, (round(x0), round(y0)), (round(x1), round(y1)), COLORS[name], 2)
 
+        self.modified_image = image
+
         cv2.imshow(self.title, image[self.crop[0]:self.crop[2], self.crop[1]:self.crop[3]])
 
     def show(self):
@@ -62,6 +65,7 @@ class Corrector:
             elif k == 8:          # Return
                 return False
             elif k in [32, 13]:   # Space or enter
+                cv2.imwrite(self.image_path[:-4] + '.mesures.png', self.modified_image)
                 return np.any(self.points != self.points_original)
             elif k == ord('-'):
                 x0, y0, x1, y1 = self.crop

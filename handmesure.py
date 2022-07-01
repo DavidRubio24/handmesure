@@ -52,12 +52,12 @@ def get_landmarks(image: str):
     return landmarks
 
 
-def main(path=r'.\data'):
+def main(path=r'\\10.10.204.24\scan4d\TENDER\HANDS_CALIBRADAS'):
     if not os.path.isdir(path):
         print(f'Ruta inexistente ({path}).', file=sys.stderr)
         return
 
-    images = [file for file in os.listdir(path) if file.endswith(('.png', '.bmp'))]
+    images = [file for file in os.listdir(path) if file.endswith(('.png', '.bmp')) and not file.endswith('mesures.png')]
 
     print(f'{len(images)} imágenes en {os.path.abspath(path)}.')
 
@@ -79,12 +79,16 @@ def main(path=r'.\data'):
                 continue
             new = True
             new_landmarks_file = os.path.join(path, f'{landmarks_file_start}.txt')
-        c = Corrector(cv2.imread(os.path.join(path, image)), landmarks)
+        c = Corrector(os.path.join(path, image), landmarks)
         print(f'Corrige landmarks de {image}...')
         update = c.show()
         cv2.destroyWindow(c.title)
         if update or new:
             d = dict(zip(points_interest_closed if 'M1' in new_landmarks_file else points_interest_opened, c.points.tolist()))
+
+            if len(image) >= 13 and image[-13] == '.' and image[-12:-4].isdigit():
+                date = image[-12:-4]
+                d['capture_date'] = date[:4] + '-' + date[4:6] + '-' + date[6:]
 
             if 'M1' in new_landmarks_file:
                 d |= compute_distances(mesure_closed(dict(zip(points_interest_closed, c.points))))
