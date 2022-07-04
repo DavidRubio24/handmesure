@@ -78,7 +78,7 @@ def main(path=r'\\10.10.204.24\scan4d\TENDER\HANDS_CALIBRADAS'):
                 print(f'No se pueden generar los landmarks de {image}.')
                 continue
             new = True
-            new_landmarks_file = os.path.join(path, f'{landmarks_file_start}.txt')
+            new_landmarks_file = os.path.join(path, f'{landmarks_file_start}.json')
         c = Corrector(os.path.join(path, image), landmarks)
         print(f'Corrige landmarks de {image}...')
         update = c.show()
@@ -98,7 +98,7 @@ def main(path=r'\\10.10.204.24\scan4d\TENDER\HANDS_CALIBRADAS'):
                 print(f'{new_landmarks_file} no contiene ni "M1" ni "M2" en el nombre. No se pueden calcular las medidas.', file=sys.stderr)
 
             with open(new_landmarks_file, 'w') as f:
-                f.write(str(d).replace(", '", ",\n'").replace("{'", "{\n'").replace("}", "\n}").replace("': [", "':\t["))
+                f.write(str(d).replace(", '", ",\n'").replace("{'", "{\n'").replace("}", "\n}").replace("': [", "':\t[").replace("'", '"'))
             print(f'Puntos {"modificados" if update else "generados"} guardados en {new_landmarks_file}')
         else:
             print(f'No se modificaron los puntos o no se quisieron guardar.')
