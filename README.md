@@ -40,13 +40,14 @@ Install opencv from conda:
 
 ```conda install opencv```
 
-Remove pip's opnecv:
+Remove pip's opencv:
 
 ```pip uninstall opencv-contrib-python```
 
 
 ### Run
 
+From the conda prompt, activate the environment:
 
 ```conda activate p10```
 

@@ -35,10 +35,11 @@ class Corrector:
         for (x, y), color in zip(self.points, self.points_colors):
             if y < 0 or x < 0 or y >= image.shape[0] or x >= image.shape[1]:
                 continue
+            circle_color = (255, 255, 255) if x % 1 else (0, 0, 255)
             x, y = round(x), round(y)
             image[y - r:y + r + 1, x:x+1] = color
             image[y:y+1, x - r:x + r + 1] = color
-            cv2.circle(image, (x, y), r, (255, 255, 255), 2)
+            cv2.circle(image, (x, y), r, circle_color, 2)
 
         # Closed hand
         if len(self.points) == 15:
