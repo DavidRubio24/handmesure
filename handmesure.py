@@ -1,5 +1,6 @@
 import os.path
 import sys
+import time
 
 import cv2
 import numpy as np
@@ -61,7 +62,9 @@ def main(path=r'\\10.10.204.24\scan4d\TENDER\HANDS_CALIBRADAS'):
 
     print(f'{len(images)} imágenes en {os.path.abspath(path)}.')
 
+    durations = []
     for image in images:
+        start = time.time()
         landmarks_file_start = image[:-4] + '_lm'
         landmarks_files = sorted([file for file in os.listdir(path) if file.startswith(landmarks_file_start)])
         if landmarks_files:
@@ -103,8 +106,12 @@ def main(path=r'\\10.10.204.24\scan4d\TENDER\HANDS_CALIBRADAS'):
             print(f'Puntos {"modificados" if update else "generados"} guardados en {new_landmarks_file}')
         else:
             print(f'No se modificaron los puntos o no se quisieron guardar.')
+        duration = int(time.time() - start)
+        durations.append(duration)
+        print(f'Tiempo empleado: {duration // 60: 2} min {duration % 60: 2} s.')
 
     print('Fin: todas las imágenes han sido corregidas.')
+    print(f'Duraciones en segundos (media {np.mean(durations)} s):\n', durations)
 
 
 if __name__ == '__main__':
