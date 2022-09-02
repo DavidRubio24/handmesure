@@ -25,6 +25,8 @@ class Corrector:
 
         self.title = 'Enter o Espacio -> correcto. Borrar -> incorrecto. Esc -> deshacer.'
         self.moving_point = None
+        self.last_point = None
+        self.shift = 0
         cv2.namedWindow(self.title, cv2.WINDOW_GUI_NORMAL)
         cv2.setMouseCallback(self.title, self.on_mouse)
 
@@ -33,9 +35,19 @@ class Corrector:
         r = 10
         # Draw points
         for (x, y), color in zip(self.points, self.points_colors):
-            if y < 0 or x < 0 or y >= image.shape[0] or x >= image.shape[1]:
+            if y >= image.shape[0] or x >= image.shape[1]:
                 continue
-            circle_color = (255, 255, 255) if x % 1 else (0, 0, 255)
+            # If the point has decimals it was estimated by the model: paint it white.
+            # If the point is -1 it doesn't count: paint it black.
+            # If the points is an integer it was measured by the user: paint it red.
+            if x < 0:
+                circle_color = (0, 0, 0)
+                x *= -1
+                y *= -1
+            elif x % 1:
+                circle_color = (255, 255, 255)
+            else:
+                circle_color = (0, 0, 255)
             x, y = round(x), round(y)
             image[y - r:y + r + 1, x:x+1] = color
             image[y:y+1, x - r:x + r + 1] = color
@@ -50,7 +62,7 @@ class Corrector:
             distances = {}
 
         for name, ((x0, y0), (x1, y1)) in distances.items():
-            cv2.line(image, (round(x0), round(y0)), (round(x1), round(y1)), COLORS[name], 2)
+            cv2.line(image, (round(abs(x0)), round(abs(y0))), (round(abs(x1)), round(abs(y1))), COLORS[name], 2)
 
         self.modified_image = image
 
@@ -77,10 +89,16 @@ class Corrector:
                 x0, y0, x1, y1 = (x0 + 10, y0 + 10, x1 - 10, y1 - 10)
                 crop = (min(x0, x1 - 11), min(y0, y1 - 11), max(x1, x0 + 11), max(y1, y0 + 11))
                 self.crop = tuple(map(round, crop))
+            elif k == 16:  # Shift
+                self.shift = 2
+            elif k == 46 and self.shift > 0:  # (Shift +) Supr
+                self.points[self.last_point] *= -1
+            self.shift = max(0, self.shift - 1)
 
     def on_mouse(self, event, x, y, *_):
         if event == cv2.EVENT_RBUTTONDOWN:
             self.moving_point = self.closest_point(x + self.crop[1], y + self.crop[0])
+            self.last_point = self.moving_point
             self.points[self.moving_point, :2] = (x + self.crop[1], y + self.crop[0])
             self.show_image()
         elif event == cv2.EVENT_MOUSEMOVE and self.moving_point is not None:

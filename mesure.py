@@ -19,11 +19,13 @@ def mesure_closed(points: dict):
                 }
 
     # handLengthCrotch parallel to middle finger.
-    direction = points['C_f3Tip'] - points['C_f3BaseC']
+    direction = abs(points['C_f3Tip']) - abs(points['C_f3BaseC'])
     direction /= np.linalg.norm(direction)
 
-    handLengthCrotch = np.dot(points['C_f3Tip'] - points['C_f1Defect'], direction) * direction + points['C_f1Defect']
+    handLengthCrotch = np.dot(abs(points['C_f3Tip']) - abs(points['C_f1Defect']), direction) * direction + abs(points['C_f1Defect'])
     distance['handLengthCrotch'] = (handLengthCrotch, points['C_f1Defect'])
+    if np.any(points['C_f3Tip'] < 0) or np.any(points['C_f3BaseC'] < 0) or np.any(points['C_f1Defect'] < 0):
+        distance['handLengthCrotch'] *= -1
 
     # handBreadthMeta perpendicular to middle finger.
     # direction[:] = -direction[1], direction[0]
@@ -34,8 +36,16 @@ def mesure_closed(points: dict):
     direction[:] = -direction[1], direction[0]
     handBreadthMeta = np.dot(points['C_m1_2'] - points['C_m1_3'], direction) * direction + points['C_m1_3']
     distance['handBreadthMeta_perpendicular_hand'] = (handBreadthMeta, points['C_m1_3'])
+    if np.any(points['C_m1_2'] < 0) or np.any(points['C_m1_3'] < 0) or np.any(points['C_m1_3'] < 0):
+        distance['handBreadthMeta_perpendicular_hand'] *= -1
 
     return distance
+
+
+def mean_sign(x, y):
+    """Return the mean of the absolute value of x and y with a negative sign if something is negative."""
+    sign = 1 if np.all(x >= 0) and np.all(y >= 0) else -1
+    return sign * np.mean([abs(x), abs(y)], axis=0)
 
 
 def mesure_opened(points: dict):
@@ -53,32 +63,28 @@ def mesure_opened(points: dict):
                 'handFourBreadthMid':      (points['O_f4MedialR'], points['O_f4MedialL']),
                 'handLittleBreadthMid':    (points['O_f5MedialR'], points['O_f5MedialL']),
 
-                'handThumbLengthDistal':   (points['O_f1Tip'], np.mean([points['O_f1DistalL'],
-                                                                        points['O_f1DistalR']], axis=0)),
-                'handIndexLengthDistal':   (points['O_f2Tip'], np.mean([points['O_f2DistalL'],
-                                                                        points['O_f2DistalR']], axis=0)),
-                'handMidLengthDistal':     (points['O_f3Tip'], np.mean([points['O_f3DistalL'],
-                                                                        points['O_f3DistalR']], axis=0)),
-                'handFourLengthDistal':    (points['O_f4Tip'], np.mean([points['O_f4DistalL'],
-                                                                        points['O_f4DistalR']], axis=0)),
-                'handLittleLengthDistal':  (points['O_f5Tip'], np.mean([points['O_f5DistalL'],
-                                                                        points['O_f5DistalR']], axis=0)),
+                'handThumbLengthDistal':   (points['O_f1Tip'], mean_sign(points['O_f1DistalL'], points['O_f1DistalR'])),
+                'handIndexLengthDistal':   (points['O_f2Tip'], mean_sign(points['O_f2DistalL'], points['O_f2DistalR'])),
+                'handMidLengthDistal':     (points['O_f3Tip'], mean_sign(points['O_f3DistalL'], points['O_f3DistalR'])),
+                'handFourLengthDistal':    (points['O_f4Tip'], mean_sign(points['O_f4DistalL'], points['O_f4DistalR'])),
+                'handLittleLengthDistal':  (points['O_f5Tip'], mean_sign(points['O_f5DistalL'], points['O_f5DistalR'])),
 
-                'handIndexLengthMid':     (np.mean([points['O_f2DistalL'], points['O_f2DistalR']], axis=0),
-                                           np.mean([points['O_f2MedialL'], points['O_f2MedialR']], axis=0)),
-                'handMidLengthMid':       (np.mean([points['O_f3DistalL'], points['O_f3DistalR']], axis=0),
-                                           np.mean([points['O_f3MedialL'], points['O_f3MedialR']], axis=0)),
-                'handFourLengthMid':      (np.mean([points['O_f4DistalL'], points['O_f4DistalR']], axis=0),
-                                           np.mean([points['O_f4MedialL'], points['O_f4MedialR']], axis=0)),
-                'handLittleLengthMid':    (np.mean([points['O_f5DistalL'], points['O_f5DistalR']], axis=0),
-                                           np.mean([points['O_f5MedialL'], points['O_f5MedialR']], axis=0)),
+                'handIndexLengthMid':     (mean_sign(points['O_f2DistalL'], points['O_f2DistalR']),
+                                           mean_sign(points['O_f2MedialL'], points['O_f2MedialR'])),
+                'handMidLengthMid':       (mean_sign(points['O_f3DistalL'], points['O_f3DistalR']),
+                                           mean_sign(points['O_f3MedialL'], points['O_f3MedialR'])),
+                'handFourLengthMid':      (mean_sign(points['O_f4DistalL'], points['O_f4DistalR']),
+                                           mean_sign(points['O_f4MedialL'], points['O_f4MedialR'])),
+                'handLittleLengthMid':    (mean_sign(points['O_f5DistalL'], points['O_f5DistalR']),
+                                           mean_sign(points['O_f5MedialL'], points['O_f5MedialR'])),
                 }
 
     return distance
 
 
 def compute_distances(points: dict, factor: float = 138/1711.1):
-    distances = {k: np.linalg.norm(v[1] - v[0]) * factor for k, v in points.items()}
+    distances = {k: np.linalg.norm(abs(v[1]) - abs(v[0])) * factor * (1 if np.all(v[0] >= 0) and np.all(v[1] >= 0) else -1)
+                 for k, v in points.items()}
     return distances
 
 
@@ -100,7 +106,7 @@ def main(path='./data'):
         elif 'M2' in landmark:
             distances = to_list(mesure_opened(d))
         else:
-            # TODO: The mesurement could perfectly be done type agnostic.
+            # TODO: The mesurement could perfectly be done type agnostic. .... Wait... Can it?
             print(f'{landmark} no contiene ni "M1" ni "M2" en el nombre.'
                   f'No se pueden calcular las distancias entre puntos.', file=sys.stderr)
             continue

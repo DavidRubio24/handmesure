@@ -86,6 +86,7 @@ def main(path=r'\\10.10.204.24\scan4d\TENDER\HANDS_CALIBRADAS'):
         if update or new:
             d = dict(zip(points_interest_closed if 'M1' in new_landmarks_file else points_interest_opened, c.points.tolist()))
 
+            # If the date is in the filename, add it to the json file.
             if len(image) >= 13 and image[-13] == '.' and image[-12:-4].isdigit():
                 date = image[-12:-4]
                 d['capture_date'] = date[:4] + '-' + date[4:6] + '-' + date[6:]
