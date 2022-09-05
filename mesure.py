@@ -36,7 +36,7 @@ def mesure_closed(points: dict):
     direction[:] = -direction[1], direction[0]
     handBreadthMeta = np.dot(abs(points['C_m1_2']) - abs(points['C_m1_3']), direction) * direction + abs(points['C_m1_3'])
     distance['handBreadthMeta_perpendicular_hand'] = (handBreadthMeta, abs(points['C_m1_3']))
-    if np.any(points['C_m1_2'] < 0) or np.any(points['C_m1_3'] < 0) or np.any(points['C_m1_3'] < 0):
+    if np.any(points['C_m1_2'] < 0) or np.any(points['C_m1_3'] < 0) or np.any(points['C_f3Tip'] < 0) or np.any(points['C_wristBaseC'] < 0):
         distance['handBreadthMeta_perpendicular_hand'] = tuple(np.array(distance['handBreadthMeta_perpendicular_hand']) * -1)
 
     return distance
