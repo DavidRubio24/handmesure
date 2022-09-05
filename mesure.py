@@ -25,19 +25,19 @@ def mesure_closed(points: dict):
     handLengthCrotch = np.dot(abs(points['C_f3Tip']) - abs(points['C_f1Defect']), direction) * direction + abs(points['C_f1Defect'])
     distance['handLengthCrotch'] = (handLengthCrotch, points['C_f1Defect'])
     if np.any(points['C_f3Tip'] < 0) or np.any(points['C_f3BaseC'] < 0) or np.any(points['C_f1Defect'] < 0):
-        distance['handLengthCrotch'] *= -1
+        distance['handLengthCrotch'] = tuple(np.array(distance['handLengthCrotch']) * -1)
 
     # handBreadthMeta perpendicular to middle finger.
     # direction[:] = -direction[1], direction[0]
     # handBreadthMeta = np.dot(points['C_m1_2'] - points['C_m1_3'], direction) * direction + points['C_m1_3']
     # distance['handBreadthMeta_perpendicular_finger3'] = (handBreadthMeta, points['C_m1_3'])
-    direction = points['C_f3Tip'] - points['C_wristBaseC']
+    direction = abs(points['C_f3Tip']) - abs(points['C_wristBaseC'])
     direction /= np.linalg.norm(direction)
     direction[:] = -direction[1], direction[0]
-    handBreadthMeta = np.dot(points['C_m1_2'] - points['C_m1_3'], direction) * direction + points['C_m1_3']
-    distance['handBreadthMeta_perpendicular_hand'] = (handBreadthMeta, points['C_m1_3'])
-    if np.any(points['C_m1_2'] < 0) or np.any(points['C_m1_3'] < 0) or np.any(points['C_m1_3'] < 0):
-        distance['handBreadthMeta_perpendicular_hand'] *= -1
+    handBreadthMeta = np.dot(abs(points['C_m1_2']) - abs(points['C_m1_3']), direction) * direction + abs(points['C_m1_3'])
+    distance['handBreadthMeta_perpendicular_hand'] = (handBreadthMeta, abs(points['C_m1_3']))
+    if np.any(abs(points['C_m1_2']) < 0) or np.any(abs(points['C_m1_3']) < 0) or np.any(abs(points['C_m1_3']) < 0):
+        distance['handBreadthMeta_perpendicular_hand'] = tuple(np.array(distance['handBreadthMeta_perpendicular_hand']) * -1)
 
     return distance
 
