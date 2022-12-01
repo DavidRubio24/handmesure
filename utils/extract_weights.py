@@ -18,7 +18,7 @@ def extract(model, tflite_path):
         except ValueError:
             print("ValueError: ", detail['name'], end=' ')
             errors += 1
-    print("\nFound {} weights and {} errors.".format(succeses, errors))
+    print(f"\nFound {succeses} weights and {errors} errors.")
 
     ops = tflite_interpreter._get_ops_details()
     layers = iter(model.layers)
@@ -29,8 +29,10 @@ def extract(model, tflite_path):
 
         # Find the corresponding layer name for this op.
         layer = next(layers)
-        while layer.name.find('conv') == -1:
+        while layer.name.find('conv') == -1 or layer.name.find('tf.convert_to_tensor') >= 0:
             layer = next(layers)
+
+        print("Loading weights for layer: ", layer.name, 'from op:', op['op_name'], details[op['inputs'][1]]['name'], end='\n')
 
         # Get the kernel for this layer.
         kernel_weight = weights_dict[details[op['inputs'][1]]['name'].replace("_dequantize", "")]
@@ -38,13 +40,13 @@ def extract(model, tflite_path):
             kernel_weight = kernel_weight.transpose(1, 2, 3, 0)
         elif layer.name.find('conv2d') != -1:
             kernel_weight = kernel_weight.transpose(1, 2, 3, 0)
-        elif layer.name.find('conv') != -1:
+        elif layer.name.find('conv') != -1 and layer.name not in ['tf.convert_to_tensor']:
             kernel_weight = kernel_weight.transpose(1, 0)
 
         # Get the bias for this layer.
         bias_weight = weights_dict[details[op['inputs'][2]]['name'].replace("_dequantize", "")]
 
         layer.set_weights([kernel_weight, bias_weight])
-        print("Loaded weights for layer: ", layer.name, end='\r')
+        print("Loaded  weights for layer: ", layer.name, 'from op:', op['op_name'], details[op['inputs'][1]]['name'], end='\n')
 
     print("\n")

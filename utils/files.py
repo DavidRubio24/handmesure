@@ -21,7 +21,7 @@ def get_file(file, path=None, function=identity):
     if tail in files:
         definitive_file = os.path.join(head, tail)
     else:
-        for file in files:
+        for file in files[::-1]:
             if file.startswith(tail):
                 definitive_file = os.path.join(head, file)
                 break

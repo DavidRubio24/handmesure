@@ -12,9 +12,6 @@ _params = {'padding': 'same',
 _params6 = _params | {'activation': 'relu6'}
 
 
-def identity(x): return x
-
-
 def conv_blocks(x, kernel_size, hidden_channels, output_channels: int = None, strides=1):
     # The result of this function call and x will be Added, they better match.
     output_channels = output_channels or x.shape[-1]

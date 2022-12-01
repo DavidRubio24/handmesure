@@ -69,6 +69,7 @@ class Corrector:
         cv2.imshow(self.title, image[self.crop[0]:self.crop[2], self.crop[1]:self.crop[3]])
 
     def show(self):
+        # return True
         while True:
             self.show_image()
             k = cv2.waitKey()
@@ -114,8 +115,8 @@ class Corrector:
 
 
 def main(path='landmarks_M2_00.txt', out='landmarks_M2_01.txt'):
-    with open(path) as f:
-        landmarks: dict = eval(f.read())
+    with open(path) as file:
+        landmarks: dict = eval(file.read())
     new_landmarks = landmarks.copy()
     for image_path, points in landmarks.items():
         image = cv2.imread(image_path)
@@ -125,8 +126,8 @@ def main(path='landmarks_M2_00.txt', out='landmarks_M2_01.txt'):
         if update:
             new_landmarks[image_path] = c.points.tolist()
         cv2.destroyWindow(c.title)
-        with open(out, 'w') as f:
-            f.write(str(new_landmarks))
+        with open(out, 'w') as file:
+            file.write(str(new_landmarks))
     return new_landmarks
 
 

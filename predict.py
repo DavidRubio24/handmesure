@@ -10,6 +10,7 @@ from utils.files import get_file, open_image
 class Predictor:
     def __init__(self, model='detect_hand', model_factory=detect_hand_model, path='models/'):
         model_path = get_file(model, path)
+        print(f'Loading model {model_path}...')
         self.model = model_factory(model_path)
         self.image_shape = None
 
