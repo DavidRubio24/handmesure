@@ -27,7 +27,7 @@ import sys
 import cv2
 import numpy as np
 
-import utils
+import calibrate.utils as utils
 
 FOCAL_LENGTH = 370000     # Empirical: based on OpenCV calibration
 SHAPE = (3120, 4208, 3)   # Max camera resolution
@@ -52,13 +52,13 @@ class Calibration:
     def add_points(self, image, pattern_size=(55, 37), window_size=25) -> bool:
         image = utils.open_image(image)
         points = get_checker(image, pattern_size, window_size)
-        if len(points):
-            self.points.append(points)
-            self.pattern_sizes.append(pattern_size)
-            self.image_size = image.shape[:2]
-            self.images.append(image)
-            return True
-        return False
+        if not len(points):
+            return False
+        self.points.append(points)
+        self.pattern_sizes.append(pattern_size)
+        self.image_size = image.shape[:2]
+        self.images.append(image)
+        return True
 
     def calibrate(self, side=1):
         if not self.points:
@@ -125,14 +125,16 @@ def equidistant(image, pattern_size=(53, 35)):
     return np.mean([one, two]) / 12.32
 
 
-def calibrate_folder(path=r'\\10.10.204.24\scan4d\TENDER\HANDS_SIN_CALIBRAR/',
-                     dest=r'\\10.10.204.24\scan4d\TENDER\HANDS_CALIBRADAS/'):
+def calibrate_folder(path=r'\\10.10.204.24\scan4d\TENDER\HANDS\01_HANDS_SIN_CALIBRAR/',
+                     dest=r'\\10.10.204.24\scan4d\TENDER\HANDS\02_HANDS_CALIBRADAS/',
+                     used_path=r"\\10.10.204.24\scan4d\TENDER\HANDS\01_HANDS_SIN_CALIBRAR/Filtradas/"):
     dest = dest or path
     files = [f for f in os.listdir(path) if f.endswith('.png') and 'undistorted' not in f]
     calibration = Calibration()
-    for file in utils.bar(files):
+    for file in files:
         undistorted = calibration.undistort(cv2.imread(os.path.join(path, file)))
         cv2.imwrite(os.path.join(dest, file[:-13] + '.undistorted' + file[-13:]), undistorted)
+        os.rename(os.path.join(path, file), os.path.join(used_path, file))
 
 
 if __name__ == '__main__':

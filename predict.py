@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 
 from model import detect_hand_model, closed_hand_model, opened_hand_model
-from utils.files import get_file, open_image
+from auxiliary.files import get_file, open_image
 
 
 class Predictor:

@@ -8,7 +8,6 @@ import numpy as np
 from constants import points_interest_closed, points_interest_opened
 from correct import Corrector
 from mesure import mesure_closed, mesure_opened, compute_distances
-from utils.files import chose_name
 
 
 def get_landmarks(image: str):

@@ -29,6 +29,10 @@ From its prompt, create a new environment:
 
 Sometimes it's necessary to close and open the promt again.
 
+Activate the environment:
+
+```conda activate p10```
+
 Install tensorflow and mediapipe with pip:
 
 ```pip install tensorflow mediapipe```

@@ -6,7 +6,7 @@ import numpy as np
 
 from constants import COLOR_SCHEME, points_interest_closed, points_interest_opened, COLORS
 from mesure import mesure_closed, mesure_opened
-from utils.files import open_image
+from auxiliary.files import open_image
 
 
 class Corrector:
@@ -24,6 +24,7 @@ class Corrector:
         self.modified_image = self.image.copy()
 
         self.title = 'Enter o Espacio -> correcto. Borrar -> incorrecto. Esc -> deshacer.'
+        self.title = 'IBV - Corrector de medidas'
         self.moving_point = None
         self.last_point = None
         self.shift = 0

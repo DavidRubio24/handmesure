@@ -13,7 +13,7 @@ _params6 = _params | {'activation': 'relu6'}
 
 
 def conv_blocks(x, kernel_size, hidden_channels, output_channels: int = None, strides=1):
-    # The result of this function call and x will be Added, they better match.
+    # The result of this function and x will be Added, they better match.
     output_channels = output_channels or x.shape[-1]
 
     x = Conv2D(hidden_channels, kernel_size=1, **_params6)(x)
@@ -23,7 +23,8 @@ def conv_blocks(x, kernel_size, hidden_channels, output_channels: int = None, st
 
 
 def common_model(input_shape=(224, 224, 3)):
-    tf.keras.backend.clear_session()  # Start naming layers from one.
+    # Start naming layers from scrach. Allows to load weights by name.
+    tf.keras.backend.clear_session()
 
     input_ = Input(input_shape)
 
@@ -107,7 +108,17 @@ def prepare_model(model, weights_path=None, loss='MSE', metrics=None, optimizer=
 
 
 def mediapipe_hand_model(weights_path=None, loss=None,  metrics=None, optimizer='adam', trainable=None):
-    """The model of MediaPipe Hands that estimates the hand skeleton."""
+    """
+    The model of MediaPipe Hands that estimates the hand skeleton.
+
+    :param weights_path: Path to the weights file.
+    :param loss: A tf.keras.losses class or its str representation.
+    :param metrics: A list of tf.keras.metrics classes or their str representations.
+    :param optimizer: A tf.keras.optimizers class or its str representation.
+    :param trainable: A list of layer names or indices to set as trainable. Indices can be negative.
+
+    :return: A tf.keras.Model object.
+    """
     input_, common = common_model()
 
     handedness  = Dense(1,  name='conv_handedness', activation='sigmoid')(common)
@@ -124,12 +135,12 @@ def mediapipe_hand_model(weights_path=None, loss=None,  metrics=None, optimizer=
 
 
 def closed_hand_model(weights_path=None, loss='MSE', metrics=None, optimizer='adam',
-                      conv_name='conv_landmarks_closed', points=15, trainable=None):
+                      conv_name='conv_landmarks_closed', points=15, trainable=(-1,)):
     """Create a model with MediaPipe Hands' structure but different number of landmarks and no handflag or handedness.
 
     :param weights_path: Path to a MediaPipe Hands model or to a model created with this function to load weights from.
     :param loss: Loss with which compile the model.
-    :param trainable: List of names of layers to set as trainable. None is equivalent to [conv_name].
+    :param trainable: List of names or indexes of layers to set as trainable. If None, all layers are trainable.
     """
     input_, common = common_model((224, 224, 3))
 
@@ -137,14 +148,14 @@ def closed_hand_model(weights_path=None, loss='MSE', metrics=None, optimizer='ad
 
     model = Model(input_, landmarks)
 
-    # Set layers as not trainable (except the last one or the specified ones), load the weights and compile the model.
-    model = prepare_model(model, weights_path, loss, metrics, optimizer, trainable or [conv_name])
+    # Set layers as not trainable (except the specified ones), load the weights and compile the model.
+    model = prepare_model(model, weights_path, loss, metrics, optimizer, trainable)
 
     return model
 
 
 def opened_hand_model(weights_path=None, loss='MSE', metrics=None, optimizer='adam',
-                      conv_name='conv_landmarks_opened', points=23, trainable=None):
+                      conv_name='conv_landmarks_opened', points=23, trainable=(-1,)):
     """Create a model with MediaPipe Hands' structure but different landmarks and no handflag or handedness."""
     return closed_hand_model(weights_path, loss, metrics, optimizer, conv_name, points, trainable)
 
