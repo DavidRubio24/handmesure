@@ -101,9 +101,9 @@ def main(path='./data'):
 
     for landmark in landmarks:
         d = eval(open(os.path.join(path, landmark)).read())
-        if 'M1' in landmark:
+        if 'M1' in landmark or 'close' in landmark:
             distances = to_list(mesure_closed(d))
-        elif 'M2' in landmark:
+        elif 'M2' in landmark or 'open' in landmark:
             distances = to_list(mesure_opened(d))
         else:
             # TODO: The mesurement could perfectly be done type agnostic. .... Wait... Can it?

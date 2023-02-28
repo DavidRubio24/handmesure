@@ -77,16 +77,16 @@ def main(path=r'./database/', auto=False):
         new_landmarks_file = file[:-4] + '.json'
 
         if auto or updated or new:
-            d = dict(zip(points_interest_closed if 'M1' in new_landmarks_file else points_interest_opened, c.points.tolist()))
+            d = dict(zip(points_interest_closed if 'M1' in new_landmarks_file or 'close' in new_landmarks_file else points_interest_opened, c.points.tolist()))
 
             # If the date is in the filename, add it to the json file.
             if len(file) >= 13 and file[-13] == '.' and file[-12:-4].isdigit():
                 date = file[-12:-4]
                 d['capture_date'] = date[:4] + '-' + date[4:6] + '-' + date[6:]
 
-            if 'M1' in new_landmarks_file:
+            if 'M1' in new_landmarks_file or 'close' in new_landmarks_file:
                 d |= compute_distances(mesure_closed(dict(zip(points_interest_closed, c.points))))
-            elif 'M2' in new_landmarks_file:
+            elif 'M2' in new_landmarks_file or 'open' in new_landmarks_file:
                 d |= compute_distances(mesure_opened(dict(zip(points_interest_opened, c.points))))
             else:
                 print(f'{new_landmarks_file} no contiene ni "M1" ni "M2" en el nombre. No se pueden calcular las medidas.', file=sys.stderr)
