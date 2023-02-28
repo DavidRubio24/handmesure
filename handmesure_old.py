@@ -3,11 +3,18 @@ import sys
 import time
 
 import cv2
+import logging
 import numpy as np
+# There are additional imports in the function get_landmarks to avoid
+# importing TensorFlow when not needed. TF is imported in model.py.
 
 from constants import points_interest_closed, points_interest_opened
 from correct import Corrector
 from mesure import mesure_closed, mesure_opened, compute_distances
+
+log = logging.getLogger(__name__); log.setLevel(logging.DEBUG)
+formatter = logging.Formatter('\x1B[0;34m{asctime} {name}.{funcName}:{lineno} {levelname:5}\x1B[0m\t{message}', style='{')
+log.addHandler(logging.StreamHandler()); log.handlers[-1].setFormatter(formatter)
 
 
 def get_landmarks(image: str):
@@ -27,6 +34,7 @@ def get_landmarks(image: str):
     from mediapipe.python.solutions.hands import Hands
     with Hands() as hands:
         results = hands.process(image[..., ::-1])
+    log.debug(f'Hands results: {results}')
     if results is None:
         crop = [(0, 0), (-1, -1)]
     else:
@@ -52,23 +60,26 @@ def get_landmarks(image: str):
     return landmarks
 
 
-def main(path=r'\\10.10.204.24\scan4d\TENDER\HANDS_CALIBRADAS'):
+def main(path=r'\\10.10.204.24\scan4d\TENDER\HANDS_CALIBRADAS', auto=False):
+    """:param auto: If True, the landmarks will be generated without human correction."""
     if not os.path.isdir(path):
         print(f'Ruta inexistente ({path}).', file=sys.stderr)
         return
 
-    images = [file for file in os.listdir(path) if file.endswith(('.png', '.bmp')) and not file.endswith('mesures.png')]
+    images = [file for file in os.listdir(path) if file.lower().endswith(('.png', '.bmp')) and not file.lower().endswith('mesures.png')]
 
     print(f'{len(images)} imágenes en {os.path.abspath(path)}.')
 
     durations = []
     for image in images:
         start = time.time()
+        # Search for landmarks file.
         landmarks_file_start = image[:-4] + '_lm'
         landmarks_files = sorted([file for file in os.listdir(path) if file.startswith(landmarks_file_start)])
         if landmarks_files:
-            landmarks_file = os.path.join(path, landmarks_files[-1])
-            d = eval(open(landmarks_file).read())
+            landmarks_file = os.path.join(path, landmarks_files[-1])  # Most recent landmarks file.
+            with open(landmarks_file) as f:
+                d = eval(f.read())
             landmarks = np.array([v for k, v in d.items() if k in points_interest_opened or k in points_interest_closed])
             print(f'Leyendo landmarks de {landmarks_file}.')
             new_landmarks_file = landmarks_file
@@ -82,10 +93,11 @@ def main(path=r'\\10.10.204.24\scan4d\TENDER\HANDS_CALIBRADAS'):
             new = True
             new_landmarks_file = os.path.join(path, f'{landmarks_file_start}.json')
         c = Corrector(os.path.join(path, image), landmarks)
-        print(f'Corrige landmarks de {image}...')
-        update = c.show()
-        cv2.destroyWindow(c.title)
-        if update or new:
+        if not auto:
+            print(f'Corrige landmarks de {image}...')
+            updated = c.show()
+            cv2.destroyWindow(c.title)
+        if auto or new or updated:
             d = dict(zip(points_interest_closed if 'M1' in new_landmarks_file else points_interest_opened, c.points.tolist()))
 
             # If the date is in the filename, add it to the json file.
@@ -101,8 +113,14 @@ def main(path=r'\\10.10.204.24\scan4d\TENDER\HANDS_CALIBRADAS'):
                 print(f'{new_landmarks_file} no contiene ni "M1" ni "M2" en el nombre. No se pueden calcular las medidas.', file=sys.stderr)
 
             with open(new_landmarks_file, 'w') as f:
-                f.write(str(d).replace(", '", ",\n'").replace("{'", "{\n'").replace("}", "\n}").replace("': [", "':\t[").replace("'", '"'))
-            print(f'Puntos {"modificados" if update else "generados"} guardados en {new_landmarks_file}')
+                # Write it as a well-formatted json file.
+                f.write(str(d)
+                        .replace(", '", ",\n'")
+                        .replace("{'", "{\n'")
+                        .replace("}", "\n}")
+                        .replace("': [", "':\t[")
+                        .replace("'", '"'))
+            print(f'Puntos {"modificados" if updated else "generados"} guardados en {new_landmarks_file}')
         else:
             print(f'No se modificaron los puntos o no se quisieron guardar.')
         duration = int(time.time() - start)

@@ -70,7 +70,6 @@ class Corrector:
         cv2.imshow(self.title, image[self.crop[0]:self.crop[2], self.crop[1]:self.crop[3]])
 
     def show(self):
-        # return True
         while True:
             self.show_image()
             k = cv2.waitKey()
@@ -80,7 +79,7 @@ class Corrector:
             elif k == 8:          # Return
                 return False
             elif k in [32, 13]:   # Space or enter
-                cv2.imwrite(self.image_path[:-4] + '.mesures.png', self.modified_image)
+                cv2.imwrite(self.image_path[:-4] + '.measures.jpg', self.modified_image)
                 return np.any(self.points != self.points_original)
             elif k == ord('-'):
                 x0, y0, x1, y1 = self.crop
