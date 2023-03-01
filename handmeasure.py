@@ -38,7 +38,7 @@ def landmarks_from_file(file, closed=True):
     return np.array([landmarks_dict[point] for point in points_interest])
 
 
-def main(path=r'./database/', auto=False):
+def main(path=r'\\10.10.204.24\scan4d\TENDER\HANDS\02_HANDS_CALIBRADAS/', auto=False):
     files = [os.path.join(path, f) for f in os.listdir(path) if f.endswith('.png')]
     durations = []
     for file in files:

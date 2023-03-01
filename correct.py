@@ -1,4 +1,3 @@
-import os
 import sys
 
 import cv2
@@ -11,6 +10,7 @@ from auxiliary.files import open_image
 
 class Corrector:
     def __init__(self, image_path: str, points: np.ndarray):
+        self.image_edges = None
         self.points_original = np.array(points, copy=False)
         self.points = np.array(points, dtype=float, copy=True)
         self.points_colors = np.array(COLOR_SCHEME, np.uint8)
@@ -78,7 +78,7 @@ class Corrector:
                 return self.show()
             elif k == 8:          # Return
                 return False
-            elif k in [32, 13]:   # Space or enter
+            elif k in [32, 13, ord('g')]:   # Space, enter or 'g'
                 cv2.imwrite(self.image_path[:-4] + '.measures.jpg', self.modified_image)
                 return np.any(self.points != self.points_original)
             elif k == ord('-'):
@@ -96,22 +96,46 @@ class Corrector:
                 self.points[self.last_point] *= -1
             self.shift = max(0, self.shift - 1)
 
-    def on_mouse(self, event, x, y, *_):
+    def on_mouse(self, event, x, y, flags, *_):
         if event == cv2.EVENT_RBUTTONDOWN:
             self.moving_point = self.closest_point(x + self.crop[1], y + self.crop[0])
             self.last_point = self.moving_point
-            self.points[self.moving_point, :2] = (x + self.crop[1], y + self.crop[0])
+            sticky_edges = flags & cv2.EVENT_FLAG_SHIFTKEY
+            self.points[self.moving_point, :2] = self.closest_edge(x + self.crop[1], y + self.crop[0], sticky_edges)
             self.show_image()
         elif event == cv2.EVENT_MOUSEMOVE and self.moving_point is not None:
-            self.points[self.moving_point, :2] = (x + self.crop[1], y + self.crop[0])
+            sticky_edges = flags & cv2.EVENT_FLAG_SHIFTKEY
+            self.points[self.moving_point, :2] = self.closest_edge(x + self.crop[1], y + self.crop[0], sticky_edges)
             self.show_image()
         elif event == cv2.EVENT_RBUTTONUP:
             self.moving_point = None
             self.show_image()
 
-    def closest_point(self, x, y):
+    def closest_point(self, x, y) -> int:
         distances = np.sqrt((self.points[..., 0] - x) ** 2 + (self.points[..., 1] - y) ** 2)
         return np.argmin(distances)
+
+    def closest_edge(self, x, y, sticky_edges=False, radius=100):
+        if not sticky_edges:
+            return x, y
+
+        if self.image_edges is None:
+            # Blur the red channel and detect its edges.
+            image_blured = cv2.GaussianBlur(self.image[..., 2], (11, 11), 0)
+            self.image_edges = cv2.Canny(image_blured, 1000, 1100, apertureSize=5)
+
+        if self.image_edges[y, x]:
+            return x, y
+
+        area = self.image_edges[y - radius:y + radius,
+                                x - radius:x + radius]
+
+        indices = np.argwhere(area)
+        min_x, min_y = max(0, x - radius), max(0, y - radius)
+        distances = np.linalg.norm(indices - (y - min_y, x - min_x), axis=1)
+        closest_index = np.argmin(distances)
+
+        return indices[closest_index, 1] + min_x, indices[closest_index, 0] + min_y
 
 
 def main(path='landmarks_M2_00.txt', out='landmarks_M2_01.txt'):

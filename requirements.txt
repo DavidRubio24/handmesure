@@ -1,4 +1,4 @@
-tensorflow~=2.9.1
+tensorflow
 mediapipe
-numpy~=1.22.3
-cv2
+numpy
+opencv-contrib-python

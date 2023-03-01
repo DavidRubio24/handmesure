@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.linalg import norm
 from mediapipe.python.solutions.hands import Hands
 
 from point_names import *
@@ -128,7 +129,7 @@ def get_line_edge(image, point1: np.ndarray, point2=None, direction=None):
 
     point2 = point2 if point2 is not None else point1 + direction
     # Get the locations of the line that goes from the first to the second point.
-    line_length = int(np.ceil(np.linalg.norm(point1 - point2)))
+    line_length = int(np.ceil(norm(point1 - point2)))
     line_locations = np.linspace(point1, point2, line_length, dtype=int)
 
     # Crop the indices to the image.
@@ -136,11 +137,25 @@ def get_line_edge(image, point1: np.ndarray, point2=None, direction=None):
     line_locations = line_locations[(line_locations[:, 1] >= 0) & (line_locations[:, 1] < image.shape[0])]
 
     # Get the color of each pixel in the line.
-    line = np.array([image[y, x] for x, y in line_locations])
+    line = np.array([image[y, x] for x, y in line_locations], dtype=int)
 
-    # Find the index at which the color changes the most.
-    change = line[1:].astype(int) - line[:-1]
-    edge = np.argmax(np.linalg.norm(change, axis=1))
-    edge_location = line_locations[edge]
+    # Compute the color changes along the line.
+    kernel = np.array([-2, -1, 0, 0, 1, 2])
+    kernel_offset = (kernel.shape[0] - 1) // 2
+    change_abs = [np.convolve(line[:, i], kernel, 'valid') for i in range(line.shape[1])]
+    change_rate = norm(change_abs, axis=0)
+
+    # Find the N most significant color changes.
+    N = 10
+    indices = np.argpartition(change_rate, kth=len(change_rate) - N)[-N:]
+    indices = indices[np.argsort(change_rate[indices])]
+    # indices = [indices[0]] + [index for i, index in enumerate(indices[1:], start=1) if max(abs(indices[:i] - index)) > 4]  # Exclude the changes that are too close to each other.
+
+    # Exclude the changes that get more similar to the color of the start of the line.
+    def before(index): return max(0, index - kernel_offset)
+    def after(index): return min(len(line), index + kernel_offset)
+    indices = [index for index in indices if norm(line[before(index)] - line[0]) < norm(line[after(index)] - line[0]) + 5] or indices
+    edge = indices[-1]  # Keep the most significant change.
+    edge_location = line_locations[edge + kernel_offset + 1]
 
     return edge_location
