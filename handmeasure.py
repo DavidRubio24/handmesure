@@ -41,7 +41,7 @@ def landmarks_from_file(file, closed=True):
 
 
 def main(path=r'\\10.10.204.24\scan4d\TENDER\HANDS\02_HANDS_CALIBRADAS/', auto=False):
-    files = [os.path.join(path, f) for f in os.listdir(path) if f.endswith('.png')]
+    files = [os.path.join(path, f) for f in os.listdir(path) if f.endswith('.png') and 'measure' not in f]
     durations = []
     for file in files:
         start = time.time()
