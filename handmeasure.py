@@ -30,6 +30,8 @@ def landmarks_from_file(file, closed=True):
     if not landmarks_files:
         return None
 
+    print(f'Cargando puntos de {landmarks_files[-1]}...')
+
     with open(os.path.join(path, landmarks_files[-1]), 'r') as json_file:
         landmarks_dict = eval(json_file.read())
 
@@ -66,8 +68,9 @@ def main(path=r'\\10.10.204.24\scan4d\TENDER\HANDS\02_HANDS_CALIBRADAS/', auto=F
             if landmarks is None:
                 print(f'No se puede detectar la mano en {file}.')
                 continue
+            landmarks = landmarks + .0001
 
-        c = Corrector(file, landmarks + .001)
+        c = Corrector(file, landmarks)
 
         if not auto:
             print(f'Corrige landmarks de {file}...')
