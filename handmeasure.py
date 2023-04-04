@@ -5,7 +5,7 @@ import time
 import cv2
 import numpy as np
 
-# There's an additional import:
+# There's a conditional import:
 # from landmarks import get_landmarks
 # It uses mediapipe, so it's only imported if necessary.
 from correct import Corrector
@@ -25,6 +25,7 @@ def landmarks_from_file(file, closed=True):
     path, name = os.path.split(file)
     basename, extension = os.path.splitext(name)
 
+    # Get the most up-to-date landmarks file.
     landmarks_files = sorted([f for f in os.listdir(path or '.') if f.startswith(basename) and f.endswith('.json')])
 
     if not landmarks_files:
@@ -42,13 +43,13 @@ def landmarks_from_file(file, closed=True):
 
 def main(path=r'\\10.10.204.24\scan4d\TENDER\HANDS\02_HANDS_CALIBRADAS/', auto=False):
     files = [os.path.join(path, f) for f in os.listdir(path) if f.endswith('.png') and 'measure' not in f]
-    durations = []
+    durations = []  # To compute the average time spent per image.
     for file in files:
         start = time.time()
         new = updated = False
-        if 'close' in file or 'M1' in file.upper():
+        if 'close' in file.lower() or 'M1' in file.upper():
             closed = True
-        elif 'open' in file or 'M2' in file.upper():
+        elif 'open' in file.lower() or 'M2' in file.upper():
             closed = False
         else:
             print(f'{file} no es ni abierto ni cerrado. Se ignora.')

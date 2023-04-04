@@ -131,7 +131,7 @@ def calibrate_folder(path=r'\\10.10.204.24\scan4d\TENDER\HANDS\01_HANDS_SIN_CALI
     dest = dest or path
     files = [f for f in os.listdir(path) if f.endswith('.png') and 'undistorted' not in f]
     calibration = Calibration()
-    for file in files:
+    for file in utils.bar_no_color(files):
         undistorted = calibration.undistort(cv2.imread(os.path.join(path, file)))
         cv2.imwrite(os.path.join(dest, file[:-13] + '.undistorted' + file[-13:]), undistorted)
         os.rename(os.path.join(path, file), os.path.join(used_path, file))
